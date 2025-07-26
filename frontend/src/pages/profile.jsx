@@ -2,14 +2,32 @@ import { FiEdit, FiShare2, FiPlus } from 'react-icons/fi';
 import { FaHome, FaCompass, FaSearch,	FaComment } from 'react-icons/fa';
 import React from "react";
 import {Link} from 'react-router-dom';
+import { useEffect, useState } from 'react';
+
 
 function Profile() {
+    const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const loggedInUser = JSON.parse(localStorage.getItem('user'));
+    if (loggedInUser) {
+      setUser(loggedInUser);
+    }
+  }, []);
+  
+  if (!user) {
+    return (
+      <div className="text-center mt-20 text-xl font-semibold text-gray-500">
+        Loading profile...
+      </div>
+    );
+  }
   return (
     <div className="bg-gradient-to-b from-white to-blue-50 min-h-screen text-gray-800 mb-16">
       {/* Header */}
       <header className="bg-white shadow-md sticky top-0 z-10 p-4">
         <div className="flex justify-between items-center max-w-5xl mx-auto">
-          <h1 className="text-xl font-bold">sanket.mali27</h1>
+          <h1 className="text-xl font-bold">{user?.username}</h1>
           <button className="text-2xl text-gray-600 hover:text-black transition-colors">⋮</button>
         </div>
       </header>
@@ -35,15 +53,15 @@ function Profile() {
           <div className="flex-1 text-gray-800">
             <div className="flex  mb-4 gap-6">
               <div className="text-center">
-                <p className="font-bold text-lg">0</p>
+                <p className="font-bold text-lg">{user.post}</p>
                 <p className="text-sm text-gray-600">Posts</p>
               </div>
               <div className="text-center">
-                <p className="font-bold text-lg">359</p>
+                <p className="font-bold text-lg">{user.followers}</p>
                 <p className="text-sm text-gray-600">Followers</p>
               </div>
               <div className="text-center">
-                <p className="font-bold text-lg">438</p>
+                <p className="font-bold text-lg">{user.following}</p>
                 <p className="text-sm text-gray-600">Following</p>
               </div>
             </div>
@@ -52,9 +70,9 @@ function Profile() {
 
         {/* Bio */}
         <div className="mb-4 text-gray-800 leading-tight">
-          <h2 className="font-bold">Sanket</h2>
-          <p className="text-sm text-gray-600">Jay Shivray ⚔️</p>
-          <p className="text-sm text-gray-600">Karma 🔥</p>
+          <h2 className="font-bold">{user.fullname}</h2>
+          <p className="text-sm text-gray-600">{user.bio}</p>
+    
         </div>
 
         {/* Action Buttons */}

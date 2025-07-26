@@ -6,11 +6,16 @@ const userSchema = new mongoose.Schema({
   avatar: String,
   bio: String,
   posts: Number,
-  followers: Number,
-  following: Number,
+  email: String,
+  password: { type: String, required: true },
+ 
+
+  posts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
+  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, {
   collection: 'User' // 👈 tell Mongoose to use 'User' exactly
-});
+}, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
 export default User;
