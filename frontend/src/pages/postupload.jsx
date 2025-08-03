@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 function CreatePostPage() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [caption, setCaption] = useState('');
-  const [showLocation, setShowLocation] = useState(false);
+  const [showLocation, setShowLocation] = useState('');
   const [showTagPeople, setShowTagPeople] = useState(false);
   const [showMusic, setShowMusic] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -20,11 +20,7 @@ function CreatePostPage() {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setSelectedImage(reader.result);
-      };
-      reader.readAsDataURL(file);
+      setSelectedImage(file); // store the actual File object!
     }
   };
 
@@ -32,23 +28,59 @@ function CreatePostPage() {
     setSelectedImage(null);
   };
 
-  const handlePost = () => {
-    // Handle post creation logic here
-    console.log({ selectedImage, caption });
-    alert('Post created successfully!');
+  const handlePost = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user')); // get logged in user
+      const userId = user?._id;
+
+
+      //  const fileInput = fileInputRef.current;
+      // if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      // alert("No file selected!");
+      // return;
+      //}
+
+      const formData = new FormData();
+      formData.append('image', selectedImage); // not fileInputRef anymore
+      // the actual file
+      formData.append('caption', caption);
+      formData.append('location', showLocation);
+      formData.append('userId', userId);
+
+      const res = await fetch('http://localhost:5000/api/posts/create', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json(); // directly get parsed JSON
+      console.log(data);
+
+      if (res.ok) {
+        alert('✅ Post created successfully!');
+        setSelectedImage(null);
+        setCaption('');
+      } else {
+        alert(`❌ Error: ${data.message}`);
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert('❌ Something went wrong!');
+    }
   };
+
 
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 p-4">
         <div className="flex justify-between items-center max-w-5xl mx-auto">
-          
+
           <Link to="/" className="p-1">
-            <FaArrowLeft className="text-xl"/>
+            <FaArrowLeft className="text-xl" />
           </Link>
           <h1 className="text-xl font-bold">Create new post</h1>
-          <button 
+          <button
             className={`text-blue-500 font-semibold ${!selectedImage && 'opacity-50'}`}
             disabled={!selectedImage}
             onClick={handlePost}
@@ -66,14 +98,14 @@ function CreatePostPage() {
               <FaRegImage className="text-4xl text-gray-400" />
             </div>
             <h2 className="text-2xl font-light mb-4">Drag photos and videos here</h2>
-            <button 
+            <button
               className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg"
               onClick={() => fileInputRef.current.click()}
             >
               Select from device
             </button>
-            <input 
-              type="file" 
+            <input
+              type="file"
               ref={fileInputRef}
               accept="image/*"
               onChange={handleImageUpload}
@@ -84,12 +116,13 @@ function CreatePostPage() {
           <div className="bg-white">
             {/* Image Preview */}
             <div className="relative">
-              <img 
-                src={selectedImage} 
-                alt="Selected" 
+              <img
+                src={URL.createObjectURL(selectedImage)}
+                alt="Selected"
                 className="w-full aspect-square object-cover"
               />
-              <button 
+
+              <button
                 className="absolute top-2 right-2 bg-gray-800 bg-opacity-50 text-white p-1 rounded-full"
                 onClick={removeImage}
               >
@@ -119,18 +152,24 @@ function CreatePostPage() {
 
               {/* Additional Options */}
               <div className="space-y-3">
-                <button 
-                  className="flex items-center justify-between w-full py-2"
-                  onClick={() => setShowLocation(!showLocation)}
-                >
-                  <div className="flex items-center">
-                    <HiOutlineLocationMarker className="text-xl mr-3" />
-                    <span>Add location</span>
-                  </div>
-                  <BsThreeDots />
-                </button>
 
-                <button 
+                <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg shadow-sm hover:shadow-md transition">
+                  <div className="flex items-center w-full">
+                    <HiOutlineLocationMarker className="text-2xl text-blue-500 mr-3" />
+                    <input
+                      type="text"
+                      placeholder="Add location..."
+                      value={showLocation}
+                      onChange={(e) => setShowLocation(e.target.value)}
+                      className="flex-1 bg-transparent outline-none text-sm placeholder-gray-500"
+                    />
+                  </div>
+                  <BsThreeDots className="text-gray-400 hover:text-gray-600 cursor-pointer" />
+                </div>
+
+
+
+                <button
                   className="flex items-center justify-between w-full py-2"
                   onClick={() => setShowTagPeople(!showTagPeople)}
                 >
@@ -141,7 +180,7 @@ function CreatePostPage() {
                   <BsThreeDots />
                 </button>
 
-                <button 
+                <button
                   className="flex items-center justify-between w-full py-2"
                   onClick={() => setShowMusic(!showMusic)}
                 >
@@ -165,7 +204,7 @@ function CreatePostPage() {
         )}
       </main>
 
-   
+
     </div>
   );
 }

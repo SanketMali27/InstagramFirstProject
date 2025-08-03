@@ -1,96 +1,100 @@
-import { FaSearch, FaRegComment, FaRegHeart, FaRegPaperPlane, FaRegBookmark, FaHome, FaUser ,FaArrowLeft } from 'react-icons/fa';
-import { RiMessengerLine } from 'react-icons/ri';
-
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-// Sample dummy data (you'll replace this with real API data later)
-const messageList = [
-  {
-    sender: "ayush.mali",
-    content: "Sent a reel by infinite_editiz",
-    time: new Date(Date.now() - 60 * 1000 * 58), // 58 minutes ago
-  },
-  {
-    sender: "sneha.k",
-    content: "How are you?",
-    time: new Date(Date.now() - 60 * 1000 * 5), // 5 minutes ago
-  },
-  {
-    sender: "vijay.b",
-    content: "See you tomorrow 👋",
-    time: new Date(Date.now() - 60 * 1000 * 120), // 2 hours ago
-  },
-];
-
-// Optional: convert timestamp to something like "58m", "2h"
-const formatTimeAgo = (time) => {
-  const diff = Math.floor((Date.now() - new Date(time)) / 60000); // in minutes
-  if (diff < 60) return `${diff}m`;
-  if (diff < 1440) return `${Math.floor(diff / 60)}h`;
-  return `${Math.floor(diff / 1440)}d`;
-};
-
+import { FaSearch, FaArrowLeft } from 'react-icons/fa';
 
 function MessagesPage() {
+  const [conversations, setConversations] = useState([]);
+
+  useEffect(() => {
+    const fetchConversations = async () => {
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      console.log("User ID:", storedUser._id);
+
+      const res = await fetch(`http://localhost:5000/api/messages/conversations/${storedUser._id}`);
+      const data = await res.json();
+      setConversations(data);
+    };
+    fetchConversations();
+  }, []);
+
+  const formatTimeAgo = (time) => {
+    const diff = Math.floor((Date.now() - new Date(time)) / 60000);
+    if (diff < 60) return `${diff}m`;
+    if (diff < 1440) return `${Math.floor(diff / 60)}h`;
+    return `${Math.floor(diff / 1440)}d`;
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0   p-4">
-    
-        <div className="flex items-center gap-4 mx-auto">
-            <Link to="/" className="p-1">
-            <FaArrowLeft className="text-xl"/>
-          </Link>
-          <h1 className="text-xl font-bold">sanket.mali27</h1>
-         
-        </div>
+      <header className="bg-white border-b p-4 flex items-center gap-4">
+        <Link to="/" className="p-1">
+          <FaArrowLeft className="text-xl"/>
+        </Link>
+        <h1 className="text-xl font-bold">Messages</h1>
       </header>
 
-      {/* Search Bar */}
-      <div className="bg-white p-4 border-b border-gray-200">
-        <div className=" mx-auto">
-          <div className="bg-gray-100 rounded-lg px-4 py-2 flex items-center">
-            <FaSearch className="text-gray-500 mr-2" />
-            <span className="text-gray-500">Ask Meta Al or Search</span>
-          </div>
+      <div className="bg-white p-4 border-b">
+        <div className="bg-gray-100 rounded-lg px-4 py-2 flex items-center">
+          <FaSearch className="text-gray-500 mr-2" />
+          <span className="text-gray-500">Search</span>
         </div>
       </div>
 
-    
-
-      {/* Messages Section */}
       <div className="bg-white">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          <h3 className="font-semibold">Messages</h3>
-          <button className="text-blue-500 mr-16 font-semibold">Request</button>
-        </div>
 
-        {/* Requests */}
-        <div className="p-4 border-b border-gray-200">
-          <h4 className="font-semibold text-sm mb-3">Requests</h4>
-          <div className="space-y-4">
-            {/* Message 1 */}
-           <div className="p-4 space-y-3">
-      {messageList.map((msg, index) => (
-        <Link to={`/messages/${msg.sender}`} key={index}>
-          <div className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg">
-            <div className="w-10 h-10 rounded-full bg-gray-200 mr-3"></div>
-            <div className="flex-1">
-              <div className="flex justify-between">
-                <p className="font-semibold">{msg.sender}</p>
-                <p className="text-gray-500 text-xs">{formatTimeAgo(msg.time)}</p>
-              </div>
-              <p className="text-gray-500 text-sm truncate">{msg.content}</p>
-            </div>
-          </div>
-        </Link>
-      ))}
-    </div>
-
-         
-          </div>
-        </div>
+        {
+         conversations.length === 0 ? (
+          <p className="text-center text-gray-500 mt-6">
+            No Messages yet.
+          </p>
+        ) : (conversations.map((conv, index) => (
+       <Link 
+  to={`/messages/${conv.user._id}/${conv.user.username}`} 
+  key={index}
+  className="block hover:bg-gray-50 transition-colors duration-200"
+>
+  <div className="flex items-center p-4 border-b border-gray-100 last:border-0">
+    <div className="relative mr-3">
+      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 overflow-hidden border-2 border-white shadow-sm">
+        <img
+          src={conv.user.avatar}
+          alt={conv.user.username}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.onerror = null; 
+            e.target.src = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+          }}
+        />
       </div>
-
+      {conv.user.isOnline && (
+        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+      )}
+    </div>
+    
+    <div className="flex-1 min-w-0">
+      <div className="flex justify-between items-baseline">
+        <h3 className="font-semibold text-gray-800 truncate mr-2">{conv.user.username}</h3>
+        <span className="text-xs text-gray-400 whitespace-nowrap">
+          {formatTimeAgo(conv.time)}
+        </span>
+      </div>
+      
+      <div className="flex justify-between items-center mt-1">
+        <p className="text-sm text-gray-500 truncate pr-2">
+          {conv.lastMessage}
+        </p>
+        {conv.unreadCount > 0 && (
+          <span className="bg-indigo-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {conv.unreadCount}
+          </span>
+        )}
+      </div>
+    </div>
+  </div>
+</Link>
+        )))}
+      
+      </div>
     </div>
   );
 }
